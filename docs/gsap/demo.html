@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GSAP ScrollTrigger 教程 Demo</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --bg:#0d0d10; --fg:#f2f2f4; --muted:#8b8b96;
+    --accent:#ff5a3c; --accent2:#4ad9c4; --line:rgba(255,255,255,.12);
+    --card:#17171c;
+  }
+  html{scroll-behavior:auto}
+  body{
+    margin:0; background:var(--bg); color:var(--fg);
+    font:16px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  h1,h2,h3{line-height:1.15; margin:0; font-weight:600; letter-spacing:-.02em}
+  h1{font-size:clamp(2.4rem,7vw,5.5rem)}
+  h2{font-size:clamp(1.7rem,4vw,3rem)}
+  p{margin:.6em 0}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85em;
+       background:rgba(255,255,255,.08);padding:.15em .4em;border-radius:4px}
+  section{padding:14vh 6vw; position:relative}
+  .sec-tag{
+    display:inline-block; font-size:.72rem; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--accent); border:1px solid currentColor; border-radius:99px;
+    padding:.35em .9em; margin-bottom:1.4rem;
+  }
+  .lead{color:var(--muted); max-width:62ch}
+
+  /* ---------- 固定 UI ---------- */
+  .progress-bar{
+    position:fixed; inset:0 0 auto 0; height:3px; z-index:100;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    transform:scaleX(0); transform-origin:left center;
+  }
+  .site-header{
+    position:fixed; top:0; left:0; right:0; z-index:90;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:1rem 6vw; backdrop-filter:blur(0px);
+    transition:background .3s ease, backdrop-filter .3s ease;
+  }
+  .site-header.is-scrolled{background:rgba(13,13,16,.72); backdrop-filter:blur(12px)}
+  .site-header .logo{font-weight:700; letter-spacing:-.03em}
+  .site-header nav{display:flex; gap:1.2rem; font-size:.85rem; color:var(--muted)}
+  .marker-toggle{
+    position:fixed; right:1rem; bottom:1rem; z-index:200;
+    background:var(--accent); color:#fff; border:0; border-radius:99px;
+    padding:.7em 1.2em; font:inherit; font-size:.8rem; cursor:pointer;
+  }
+
+  /* ---------- 1. Hero 视差 ---------- */
+  .hero{
+    height:100vh; display:grid; place-items:center; text-align:center;
+    overflow:hidden; padding:0 6vw;
+  }
+  .hero-bg{
+    position:absolute; inset:-15% 0; z-index:0;
+    background:
+      radial-gradient(60% 50% at 30% 30%, rgba(255,90,60,.35), transparent 70%),
+      radial-gradient(50% 50% at 75% 65%, rgba(74,217,196,.28), transparent 70%);
+    filter:blur(20px);
+  }
+  .hero-inner{position:relative; z-index:1}
+  .hero p{color:var(--muted)}
+  .scroll-hint{position:absolute; bottom:6vh; left:50%; translate:-50% 0; z-index:1;
+               font-size:.75rem; letter-spacing:.2em; color:var(--muted)}
+
+  /* ---------- 2. reveal ---------- */
+  .reveal-list{display:grid; gap:1rem; margin-top:2.5rem; max-width:760px}
+  .reveal{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:1.4rem 1.6rem;
+  }
+  .reveal h3{font-size:1.05rem; margin-bottom:.3rem}
+  .reveal p{margin:0; color:var(--muted); font-size:.9rem}
+
+  /* ---------- 3. batch grid ---------- */
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+        gap:1rem; margin-top:2.5rem}
+  .tile{
+    aspect-ratio:4/3; border-radius:14px; display:grid; place-items:center;
+    font-size:1.6rem; font-weight:700; color:#0d0d10;
+    background:linear-gradient(135deg,var(--accent2),#7ee8d8);
+  }
+  .tile:nth-child(even){background:linear-gradient(135deg,var(--accent),#ff8b6d)}
+
+  /* ---------- 4. scrub 进度 ---------- */
+  .scrub-demo{max-width:760px; margin-top:2.5rem}
+  .track{height:10px; border-radius:99px; background:rgba(255,255,255,.08); overflow:hidden}
+  .track > i{display:block; height:100%; background:var(--accent2);
+             transform:scaleX(0); transform-origin:left}
+  .scrub-num{font-size:clamp(3rem,10vw,7rem); font-weight:700; font-variant-numeric:tabular-nums}
+  .rot-box{width:110px; height:110px; border-radius:20px; background:var(--accent); margin-top:2rem}
+
+  /* ---------- 5. pin timeline ---------- */
+  .pin-sec{height:100vh; display:grid; place-items:center; padding:0 6vw; overflow:hidden}
+  .pin-stage{position:relative; width:100%; max-width:900px; text-align:center}
+  .pin-word{font-size:clamp(2rem,8vw,6rem); font-weight:700; letter-spacing:-.04em}
+  .pin-word span{display:inline-block}
+  .pin-ring{
+    position:absolute; left:50%; top:50%; translate:-50% -50%;
+    width:min(70vmin,460px); aspect-ratio:1; border-radius:50%;
+    border:1px solid var(--line); z-index:-1;
+  }
+
+  /* ---------- 6. 横向滚动 ---------- */
+  .horizontal{overflow:hidden; padding:0}
+  .h-track{display:flex; width:max-content; height:100vh}
+  .panel{
+    width:100vw; height:100vh; flex:none; display:grid; place-items:center;
+    padding:0 6vw; text-align:center;
+  }
+  .panel:nth-child(1){background:#141419}
+  .panel:nth-child(2){background:#191420}
+  .panel:nth-child(3){background:#14191c}
+  .panel:nth-child(4){background:#1c1814}
+  .panel .big{font-size:clamp(3rem,14vw,10rem); font-weight:700; opacity:.15; letter-spacing:-.05em}
+  .panel .cap{position:absolute; font-size:1.1rem}
+
+  /* ---------- 7. 卡片堆叠 ---------- */
+  .stack-wrap{padding:0}
+  .stack-card{
+    height:100vh; display:grid; place-items:center; padding:0 6vw;
+    border-top:1px solid var(--line);
+  }
+  .stack-inner{
+    width:min(720px,86vw); aspect-ratio:16/10; border-radius:22px;
+    display:grid; place-items:center; text-align:center; padding:2rem;
+    box-shadow:0 30px 80px rgba(0,0,0,.5);
+  }
+  .stack-card:nth-child(1) .stack-inner{background:#25252e}
+  .stack-card:nth-child(2) .stack-inner{background:#2e2529}
+  .stack-card:nth-child(3) .stack-inner{background:#25302e}
+
+  /* ---------- 8. 逐词文字 ---------- */
+  .split{font-size:clamp(1.6rem,4.5vw,3.2rem); font-weight:600; max-width:20ch; line-height:1.2}
+  .split .w{display:inline-block; overflow:hidden; vertical-align:bottom}
+  .split .w i{display:inline-block; font-style:normal}
+
+  /* ---------- 9. 计数 ---------- */
+  .stats{display:flex; flex-wrap:wrap; gap:3rem; margin-top:2.5rem}
+  .stat b{display:block; font-size:clamp(2.4rem,7vw,4.2rem); font-weight:700;
+          font-variant-numeric:tabular-nums; letter-spacing:-.03em}
+  .stat span{color:var(--muted); font-size:.85rem}
+
+  footer{padding:20vh 6vw 12vh; text-align:center; color:var(--muted); font-size:.85rem}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important}
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-bar"></div>
+
+<header class="site-header">
+  <div class="logo">ScrollTrigger<span style="color:var(--accent)">.</span></div>
+  <nav><a style="color:inherit;text-decoration:none">向下滚 / 向上滚试试这个 header</a></nav>
+</header>
+
+<button class="marker-toggle">显示 markers</button>
+
+<!-- 1. HERO 视差 -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-inner">
+    <h1>GSAP ScrollTrigger</h1>
+    <p>9 个可运行示例 · 打开 <code>markers</code> 看触发线在哪</p>
+  </div>
+  <div class="scroll-hint">SCROLL ↓</div>
+</section>
+
+<!-- 2. reveal -->
+<section>
+  <span class="sec-tag">01 / 基础进场</span>
+  <h2>逐个 reveal</h2>
+  <p class="lead">每个卡片以<strong>自己</strong>为 trigger，滚到视口 85% 处播放。注意源码里 <code>trigger: el</code> —— 写成 <code>".reveal"</code> 就会全部一起动。</p>
+  <div class="reveal-list">
+    <div class="reveal"><h3>trigger 必须是当前元素</h3><p>forEach 循环里传 el，不要传选择器字符串。</p></div>
+    <div class="reveal"><h3>start: "top 85%"</h3><p>元素顶部碰到视口 85% 高度时触发。</p></div>
+    <div class="reveal"><h3>once: true</h3><p>播完即销毁，往回滚不再重播。</p></div>
+    <div class="reveal"><h3>gsap.from()</h3><p>从透明+下移动到 CSS 原始状态，不用写初始样式。</p></div>
+  </div>
+</section>
+
+<!-- 3. batch -->
+<section>
+  <span class="sec-tag">02 / batch 批量</span>
+  <h2>ScrollTrigger.batch()</h2>
+  <p class="lead">同屏进入的元素自动合并成一组，用 <code>stagger</code> 依次出场。比 12 个独立实例省性能。</p>
+  <div class="grid">
+    <div class="tile">1</div><div class="tile">2</div><div class="tile">3</div><div class="tile">4</div>
+    <div class="tile">5</div><div class="tile">6</div><div class="tile">7</div><div class="tile">8</div>
+    <div class="tile">9</div><div class="tile">10</div><div class="tile">11</div><div class="tile">12</div>
+  </div>
+</section>
+
+<!-- 4. scrub -->
+<section>
+  <span class="sec-tag">03 / scrub</span>
+  <h2>滚动条驱动进度</h2>
+  <p class="lead"><code>scrub: 1</code> 让动画进度跟着滚动走，并带 1 秒平滑追赶。停下来、往回滚，动画会跟着倒退。</p>
+  <div class="scrub-demo">
+    <div class="scrub-num">0%</div>
+    <div class="track"><i></i></div>
+    <div class="rot-box"></div>
+  </div>
+</section>
+
+<!-- 5. pin + timeline -->
+<section class="pin-sec">
+  <div class="pin-stage">
+    <div class="pin-ring"></div>
+    <span class="sec-tag">04 / pin + timeline</span>
+    <div class="pin-word">
+      <span>PIN</span> <span>把</span><span>它</span><span>钉</span><span>住</span>
+    </div>
+    <p class="lead" style="margin:1.5rem auto 0">一条 timeline 由一个 ScrollTrigger 控制，pin 期间滚动 1600px。</p>
+  </div>
+</section>
+
+<!-- 6. 横向滚动 -->
+<section class="horizontal">
+  <div class="h-track">
+    <div class="panel"><div class="big">01</div><div class="cap">横向滚动 · pin + xPercent</div></div>
+    <div class="panel"><div class="big">02</div><div class="cap">snap 让它吸附到每一屏</div></div>
+    <div class="panel"><div class="big">03</div><div class="cap">end 用函数动态算宽度</div></div>
+    <div class="panel"><div class="big">04</div><div class="cap">桌面才启用（matchMedia）</div></div>
+  </div>
+</section>
+
+<!-- 7. 卡片堆叠 -->
+<div class="stack-wrap">
+  <div class="stack-card"><div class="stack-inner">
+    <div><span class="sec-tag">05 / 堆叠</span><h2>pinSpacing: false</h2><p class="lead">卡片依次钉住并叠在一起。</p></div>
+  </div></div>
+  <div class="stack-card"><div class="stack-inner">
+    <div><h2>第二张压上来</h2><p class="lead">前一张同时缩小、变暗。</p></div>
+  </div></div>
+  <div class="stack-card"><div class="stack-inner">
+    <div><h2>第三张收尾</h2><p class="lead">最后一张不加 pin，正常滚过去。</p></div>
+  </div></div>
+</div>
+
+<!-- 8. 逐词文字 -->
+<section>
+  <span class="sec-tag">06 / 文字</span>
+  <div class="split">把每个词包一层 overflow hidden，就有了从下往上翻出来的效果。</div>
+</section>
+
+<!-- 9. 计数 -->
+<section>
+  <span class="sec-tag">07 / 数字</span>
+  <h2>滚到就开始计数</h2>
+  <p class="lead">动的是一个普通 JS 对象，<code>onUpdate</code> 里把值写回 DOM。</p>
+  <div class="stats">
+    <div class="stat"><b data-count="1280">0</b><span>项目交付</span></div>
+    <div class="stat"><b data-count="96" data-suffix="%">0</b><span>客户满意度</span></div>
+    <div class="stat"><b data-count="14" data-suffix="年">0</b><span>行业经验</span></div>
+  </div>
+</section>
+
+<footer>
+  Demo 结束 —— 往回滚看看哪些动画会倒放。<br>
+  右下角按钮可以开关 markers。
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+/* ============================================================
+   0. markers 开关（刷新后保持）
+   ============================================================ */
+let markersOn = sessionStorage.getItem("stMarkers") === "1";
+ScrollTrigger.defaults({ markers: markersOn });
+const btn = document.querySelector(".marker-toggle");
+btn.textContent = markersOn ? "隐藏 markers" : "显示 markers";
+btn.addEventListener("click", () => {
+  sessionStorage.setItem("stMarkers", markersOn ? "0" : "1");
+  location.reload();
+});
+
+/* ============================================================
+   1. 顶部阅读进度条 —— scrub 跟随整页滚动
+   ============================================================ */
+gsap.to(".progress-bar", {
+  scaleX: 1,
+  ease: "none",
+  scrollTrigger: {
+    trigger: document.body,
+    start: "top top",
+    end: "bottom bottom",
+    scrub: 0.3,
+    markers: false,          // 这条不需要标记
+  },
+});
+
+/* ============================================================
+   2. header：滚过 80px 换样式；向下滚隐藏、向上滚显示
+   ============================================================ */
+ScrollTrigger.create({
+  start: "top -80",
+  end: 99999,
+  toggleClass: { targets: ".site-header", className: "is-scrolled" },
+  markers: false,
+});
+
+const header = document.querySelector(".site-header");
+ScrollTrigger.create({
+  start: "top -300",
+  end: 99999,
+  markers: false,
+  onUpdate: (self) => {
+    gsap.to(header, {
+      yPercent: self.direction === 1 ? -100 : 0,
+      duration: 0.4,
+      ease: "power2.out",
+      overwrite: true,
+    });
+  },
+  onLeaveBack: () => gsap.to(header, { yPercent: 0, duration: 0.3 }),
+});
+
+/* ============================================================
+   3. Hero 视差 —— 背景走得比内容慢
+   ============================================================ */
+gsap.to(".hero-bg", {
+  yPercent: 30,
+  ease: "none",
+  scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true, markers: false },
+});
+gsap.to(".hero-inner", {
+  yPercent: -40,
+  opacity: 0,
+  ease: "none",
+  scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true, markers: false },
+});
+gsap.to(".scroll-hint", {
+  y: 10, opacity: .3, duration: 1.2, repeat: -1, yoyo: true, ease: "sine.inOut",
+});
+
+/* ============================================================
+   4. 逐个 reveal —— 注意 trigger 传的是 el
+   ============================================================ */
+gsap.utils.toArray(".reveal").forEach((el) => {
+  gsap.from(el, {
+    y: 50,
+    opacity: 0,
+    duration: 0.9,
+    ease: "power3.out",
+    scrollTrigger: {
+      trigger: el,          // ← 关键：不是 ".reveal"
+      start: "top 85%",
+      once: true,
+    },
+  });
+});
+
+/* ============================================================
+   5. batch —— 同屏进入的 tile 自动分组 stagger
+   ============================================================ */
+ScrollTrigger.batch(".tile", {
+  start: "top 88%",
+  once: true,
+  onEnter: (batch) =>
+    gsap.from(batch, {
+      y: 60,
+      opacity: 0,
+      scale: 0.9,
+      duration: 0.8,
+      ease: "power3.out",
+      stagger: 0.08,
+      overwrite: true,
+    }),
+});
+
+/* ============================================================
+   6. scrub —— 进度条 / 百分比 / 旋转方块共用一个 ScrollTrigger
+   ============================================================ */
+const scrubState = { p: 0 };
+const numEl = document.querySelector(".scrub-num");
+
+gsap.timeline({
+  scrollTrigger: {
+    trigger: ".scrub-demo",
+    start: "top 75%",
+    end: "bottom 30%",
+    scrub: 1,
+    id: "scrub",
+    onUpdate: (self) => {
+      numEl.textContent = Math.round(self.progress * 100) + "%";
+    },
+  },
+})
+  .to(".track > i", { scaleX: 1, ease: "none" }, 0)
+  .to(".rot-box", { rotate: 225, borderRadius: "50%", backgroundColor: "#4ad9c4", ease: "none" }, 0);
+
+/* ============================================================
+   7. pin + timeline —— 一条时间轴，多段动画按比例分配滚动距离
+   ============================================================ */
+const pinTl = gsap.timeline({
+  scrollTrigger: {
+    trigger: ".pin-sec",
+    start: "top top",
+    end: "+=1600",
+    scrub: 1,
+    pin: true,
+    anticipatePin: 1,
+    id: "pin",
+  },
+});
+
+pinTl
+  .from(".pin-word span", { yPercent: 120, opacity: 0, stagger: 0.15, duration: 1.5, ease: "power3.out" })
+  .to(".pin-ring", { scale: 1.6, rotate: 90, borderColor: "rgba(255,90,60,.6)", duration: 2 }, 0)
+  .to(".pin-word span", { color: (i) => (i % 2 ? "#4ad9c4" : "#ff5a3c"), stagger: 0.1, duration: 1 }, ">-0.5")
+  .to(".pin-stage", { scale: 0.85, opacity: 0.25, duration: 1.2 }, ">");
+
+/* ============================================================
+   8 + 9. 响应式：横向滚动只在桌面启用
+   ============================================================ */
+const mm = gsap.matchMedia();
+
+mm.add("(min-width: 900px)", () => {
+  const panels = gsap.utils.toArray(".panel");
+
+  const hTween = gsap.to(panels, {
+    xPercent: -100 * (panels.length - 1),
+    ease: "none",
+    scrollTrigger: {
+      trigger: ".horizontal",
+      pin: true,
+      scrub: 1,
+      snap: { snapTo: 1 / (panels.length - 1), duration: 0.3, ease: "power1.inOut" },
+      end: () => "+=" + document.querySelector(".horizontal").offsetWidth,
+      invalidateOnRefresh: true,
+      id: "horizontal",
+    },
+  });
+
+  // 面板内的大数字再做一层视差
+  panels.forEach((p) => {
+    gsap.to(p.querySelector(".big"), {
+      x: -120,
+      ease: "none",
+      scrollTrigger: {
+        trigger: p,
+        containerAnimation: hTween,   // ← 横向滚动内部触发的关键
+        start: "left right",
+        end: "right left",
+        scrub: true,
+        markers: false,
+      },
+    });
+  });
+
+  return () => {};   // 离开断点时 matchMedia 自动清理
+});
+
+mm.add("(max-width: 899px)", () => {
+  // 移动端改成纵向逐屏进场
+  gsap.utils.toArray(".panel").forEach((p) => {
+    gsap.from(p.querySelector(".big"), {
+      y: 60, opacity: 0, duration: 1, ease: "power3.out",
+      scrollTrigger: { trigger: p, start: "top 80%", once: true },
+    });
+  });
+  gsap.set(".h-track", { flexDirection: "column", width: "100%" });
+  gsap.set(".panel", { width: "100%", height: "60vh" });
+});
+
+/* ============================================================
+   10. 卡片堆叠 —— pinSpacing:false + 前一张缩小
+   ============================================================ */
+const stackCards = gsap.utils.toArray(".stack-card");
+stackCards.forEach((card, i) => {
+  const isLast = i === stackCards.length - 1;
+  if (!isLast) {
+    ScrollTrigger.create({
+      trigger: card,
+      start: "top top",
+      end: "bottom top",
+      pin: true,
+      pinSpacing: false,
+      markers: false,
+    });
+    gsap.to(card.querySelector(".stack-inner"), {
+      scale: 0.9,
+      opacity: 0.4,
+      ease: "none",
+      scrollTrigger: { trigger: card, start: "top top", end: "bottom top", scrub: true, markers: false },
+    });
+  }
+  gsap.from(card.querySelector(".stack-inner"), {
+    y: 80,
+    opacity: 0,
+    duration: 0.9,
+    ease: "power3.out",
+    scrollTrigger: { trigger: card, start: "top 70%", once: true, markers: false },
+  });
+});
+
+/* ============================================================
+   11. 逐词文字翻出
+   ============================================================ */
+document.querySelectorAll(".split").forEach((el) => {
+  const words = el.textContent.trim().split(/\s+|(?<=[一-龥，。、])/).filter(Boolean);
+  el.innerHTML = words.map((w) => '<span class="w"><i>' + w + "</i></span>").join("");
+
+  gsap.from(el.querySelectorAll("i"), {
+    yPercent: 115,
+    duration: 0.9,
+    ease: "power3.out",
+    stagger: 0.03,
+    scrollTrigger: { trigger: el, start: "top 82%", once: true },
+  });
+});
+
+/* ============================================================
+   12. 数字计数
+   ============================================================ */
+document.querySelectorAll("[data-count]").forEach((el) => {
+  const target = +el.dataset.count;
+  const suffix = el.dataset.suffix || "";
+  const obj = { v: 0 };
+
+  gsap.to(obj, {
+    v: target,
+    duration: 2,
+    ease: "power2.out",
+    snap: { v: 1 },
+    onUpdate: () => (el.textContent = obj.v.toLocaleString() + suffix),
+    scrollTrigger: { trigger: el, start: "top 88%", once: true },
+  });
+});
+
+/* ============================================================
+   13. 收尾：图片/字体加载完重算位置
+   ============================================================ */
+window.addEventListener("load", () => ScrollTrigger.refresh());
+</script>
+</body>
+</html>

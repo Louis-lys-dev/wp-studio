@@ -10,6 +10,8 @@ WordPress 建站与运维的完整教程集。面向实际交付，不是入门�
 | [WordPress 主题开发](docs/wordpress-theme.md) | 18 节 | 模板层级、The Loop、模块化、资源加载、ACF 深入、**静态前端 → ACF 模块的方法论**、转义与净化、代码审查清单 |
 | [WooCommerce 开发](docs/woocommerce.md) | 27 节 | HPOS 与表结构、CRUD 对象、模板与钩子体系、购物车/结算/订单、支付网关与配送方式开发、邮件、Blocks、Store API、需求配方集 |
 | [宝塔面板 + LNMP](docs/bt-lnmp.md) | 25 节 | LNMP 原理、面板加固、Nginx/PHP-FPM/MySQL 调优、三层缓存、备份与迁移、按症状索引的排错手册、安全加固、手工部署对照 |
+| [GSAP 核心](docs/gsap/gsap-core.md) | 26 节 | 补间、Timeline 与位置参数、缓动、stagger、utils、matchMedia、context、性能、无障碍、SVG/SplitText/Flip/Observer、框架集成 |
+| [ScrollTrigger](docs/gsap/scrolltrigger.md) | 12 节 | start/end、scrub、pin、batch、响应式、配合 Lenis、坑与排错、实战片段（配 [可跑的 demo](docs/gsap/demo.html)） |
 
 ## 脚手架
 
@@ -28,6 +30,7 @@ WordPress 建站与运维的完整教程集。面向实际交付，不是入门�
 - `bt-lnmp.md` 第 12 节 —— 三层缓存，整页缓存是数量级的性能差异
 - `bt-lnmp.md` 第 14 节 —— 备份，重点在「恢复演练」那一小节
 - `bt-lnmp.md` 第 18 节 —— 排错手册
+- `gsap/gsap-core.md` 第 10 节 —— Timeline 的位置参数，GSAP 里最该背下来的一张表
 
 ## 约定
 
