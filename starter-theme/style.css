@@ -1,0 +1,23 @@
+/*
+Theme Name:  Starter Theme
+Theme URI:   https://github.com/Louis-lys-dev/wp-studio
+Author:      Your Name
+Author URI:  https://example.com
+Description: Blank ACF-driven modular starter theme. Companion to the wp-studio docs.
+Version:     1.0.0
+Requires at least: 6.0
+Tested up to: 6.6
+Requires PHP: 8.1
+License:     GPL-2.0-or-later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: mytheme
+Tags:        custom-menu, featured-images, translation-ready
+*/
+
+/*
+ * This file exists for the theme header above. WordPress reads it to identify
+ * the theme, and it must stay here even if no styles are written in it.
+ *
+ * Actual styles belong in assets/css/. See functions/assets.php for how they
+ * are enqueued.
+ */

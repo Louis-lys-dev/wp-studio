@@ -11,6 +11,10 @@ WordPress 建站与运维的完整教程集。面向实际交付，不是入门�
 | [WooCommerce 开发](docs/woocommerce.md) | 27 节 | HPOS 与表结构、CRUD 对象、模板与钩子体系、购物车/结算/订单、支付网关与配送方式开发、邮件、Blocks、Store API、需求配方集 |
 | [宝塔面板 + LNMP](docs/bt-lnmp.md) | 25 节 | LNMP 原理、面板加固、Nginx/PHP-FPM/MySQL 调优、三层缓存、备份与迁移、按症状索引的排错手册、安全加固、手工部署对照 |
 
+## 脚手架
+
+[`starter-theme/`](starter-theme/) —— 空白的 ACF 模块化主题骨架，和 `docs/wordpress-theme.md` 的方法论一一对应。结构、钩子接线、转义习惯和几个高频坑的防护都是现成的，样式和业务逻辑留空。用法见 [starter-theme/README.md](starter-theme/README.md)。
+
 ## 怎么用
 
 **新手按顺序读**：`wordpress-core` → `wordpress-theme` → `woocommerce`，部署阶段再看 `bt-lnmp`。
