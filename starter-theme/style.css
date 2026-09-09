@@ -15,9 +15,15 @@ Tags:        custom-menu, featured-images, translation-ready
 */
 
 /*
- * This file exists for the theme header above. WordPress reads it to identify
- * the theme, and it must stay here even if no styles are written in it.
+ * 这个文件的唯一作用是承载上面那段主题头信息。WordPress 靠它识别主题
+ * （后台「外观 → 主题」里显示的名字、截图、版本号都来自这里），所以
+ * 哪怕一条样式都不写，这个文件也必须留在主题根目录。
  *
- * Actual styles belong in assets/css/. See functions/assets.php for how they
- * are enqueued.
+ * 头信息里几个容易忽略的字段：
+ *   Text Domain        —— 必须和代码里 __()、_e() 的第二个参数一致，否则翻译不生效
+ *   Requires PHP       —— 低于这个版本的服务器会被 WordPress 拦住不让启用，避免白屏
+ *   Requires at least  —— 同理，限制最低 WordPress 版本
+ *
+ * 真正的样式写在 assets/css/ 里。加载方式见 functions/assets.php——
+ * 不要在这个文件里写样式，因为它不会被自动加载（除非你自己 enqueue 它）。
  */
