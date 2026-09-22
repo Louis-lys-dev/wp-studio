@@ -4,7 +4,7 @@
 #   ./pull.sh            preview changes, then ask before applying
 #   ./pull.sh -y         apply without asking
 #   ./pull.sh --delete   also remove local files missing on the remote
-set -uo pipefail
+set -o pipefail
 
 REMOTE_HOST="lys@207.148.92.171"
 REMOTE_PORT=22
@@ -22,11 +22,11 @@ EXCLUDES=(
 )
 
 YES=0
-DELETE=()
+DELETE=""
 for arg in "$@"; do
   case "$arg" in
     -y|--yes)  YES=1 ;;
-    --delete)  DELETE=(--delete) ;;
+    --delete)  DELETE="--delete" ;;
     -h|--help) sed -n '2,6p' "$0"; exit 0 ;;
     *) echo "Unknown argument: $arg" >&2; exit 1 ;;
   esac
@@ -34,7 +34,7 @@ done
 
 mkdir -p "$LOCAL_DIR" || exit 1
 
-RSYNC=(rsync -az --human-readable "${DELETE[@]}" "${EXCLUDES[@]}"
+RSYNC=(rsync -az --human-readable $DELETE "${EXCLUDES[@]}"
        -e "ssh -p ${REMOTE_PORT} -o ConnectTimeout=10")
 SRC="${REMOTE_HOST}:${REMOTE_DIR}/"
 DST="${LOCAL_DIR}/"
